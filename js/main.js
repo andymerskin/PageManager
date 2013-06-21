@@ -21,12 +21,10 @@ jQuery(document).ready(function($) {
 			$('#pagemanager').append("<h2>This was added later.</h2>");
 		});
 
-		var $h2 = $('h2');
-
-		$('h2').animate({
-			opacity: 0
-		},{duration: 2000}).promise().then(function(){
-			log("Done");
-		});
+		// $('h2').animate({
+		// 	opacity: 0
+		// },{duration: 2000}).promise().then(function(){
+		// 	log("Done");
+		// });
 
 });
