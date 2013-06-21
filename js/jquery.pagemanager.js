@@ -10,7 +10,11 @@
 		container: "#pagemanager"
 	};
 
-	var cache = {}
+	var cache = {};
+	var states = {
+		last: null,
+		current: null
+	};
 
 	var pub = {
 
@@ -25,31 +29,36 @@
 
 	}
 
-	function _show(state) {
-		_saveState();
+	function _show( state ) {
+		if ( states.current ) {
+			_saveState( states.current );
+			states.last = states.current;
+		}
 
-		if (cache[state]) {
+		if ( cache[state] ) {
 			log(state + " exists!");
-			$(options.container).html(cache[state]);
+			_restoreState( state );
 		} else {
 			log("Rendering page: " + state);
-			_render(state);
+			_renderState( state );
 		}
 	}
 
-	function _render(url) {
+	function _renderState(url) {
 		var _url = url + '.html';
 		$.get(_url, function(data) {
 			$(options.container).html(data);
+			states.current = url;
 		});
 	}
 
-	function _saveState(state) {
+	function _saveState( state ) {
 		cache[state] = $(options.container).html();
 	}
 
-	function _restoreState(name) {
-
+	function _restoreState( state ) {
+		$(options.container).html( cache[state] );
+		states.current = state;
 	}
 
 	$.pageManager = function(method) {
