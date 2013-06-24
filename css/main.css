@@ -64,9 +64,14 @@ textarea {
     /*overflow: hidden;*/
 }
 
+input[type=text],
+textarea {
+    display: block;
+}
 
-
-
+label {
+    display: block;
+}
 
 
 
