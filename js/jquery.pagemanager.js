@@ -12,7 +12,6 @@
 			
 			// default plugin options to be merged with 'options':
 			defaults = {
-				validate: false,
 				cache: true,
 				cacheForms: true,
 				firstPage: '',
@@ -218,6 +217,7 @@
 				return $(this);
 			}
 		},
+
 
 		/*
 		 *	Event Binding to Kill off the Zombies
