@@ -14,11 +14,11 @@ jQuery(document).ready(function($) {
 			animateHeight: true
 		});
 
-		$('body').on('click', '.test-1-link', function(event) {
-			event.preventDefault();
-			var url = $(this).data('pm-url');
-			$('#pagemanager').pageManager(url);
-		});
+		// $('body').on('click', '.test-1-link', function(event) {
+		// 	event.preventDefault();
+		// 	var url = $(this).data('pm-url');
+		// 	$('#pagemanager').pageManager(url);
+		// });
 
 		$('body').on('click', '.add-element', function(event) {
 			event.preventDefault();
