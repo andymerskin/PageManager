@@ -3,8 +3,12 @@ log = function(msg) {
 }
 
 jQuery(document).ready(function($) {
-	
-		$.pageManager({
+		
+		$.ajaxSetup({
+			cache: false
+		});
+
+		$('#pagemanager').pageManager({
 			firstPage: 'partials/test-1',
 			animate: true,
 			animateHeight: true
@@ -12,8 +16,8 @@ jQuery(document).ready(function($) {
 
 		$('body').on('click', '.test-1-link', function(event) {
 			event.preventDefault();
-			var url = $(this).data('url');
-			$.pageManager('goto', url);
+			var url = $(this).data('pm-url');
+			$('#pagemanager').pageManager(url);
 		});
 
 		$('body').on('click', '.add-element', function(event) {

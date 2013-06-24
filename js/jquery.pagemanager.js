@@ -1,151 +1,141 @@
-(function($) {
+;(function( $, window, document, undefined ) {
 
-	$.ajaxSetup({
-		cache: false
-	});
+	var pluginName = "pageManager",
+			defaults = {
+				validate: false,
+				cache: true,
+				firstPage: '',
 
-	var options = {
-		validate: false,
-		cache: true,
-		container: "#pagemanager",
-		firstPage: '',
+				animate: true,
+				animationProperties: {
+					before: { opacity: 0 },
+					after: { opacity: 1 }
+				},
+				animationDuration: {
+					before: 100,
+					after: 500
+				},
+				animationEasing: {
+					before: 'swing',
+					after: 'swing'
+				},
+				animateHeight: true,
+				animationHeightDuration: 250,
+				animationHeightEasing: 'swing'
+			},
+			cache = {},
+			states = {
+				last: null,
+				current: null
+			},
+			$data,
+			$instance;
 
-		animate: true,
-		animationProperties: {
-			before: { opacity: 0 },
-			after: { opacity: 1 }
-		},
-		animationDuration: {
-			before: 100,
-			after: 500
-		},
-		animationEasing: {
-			before: 'swing',
-			after: 'swing'
-		},
-		animateHeight: true,
-		animationHeightDuration: 250,
-		animationHeightEasing: 'swing'
-	};
-
-	var cache = {},
-		states = {
-			last: null,
-			current: null
-		},
-		$container,
-		$data;
-
-	var pub = {
-
-		// Public methods for use with constructor.
-		// Call with a string, arguments second.
-		 
-		goto: function(url) {
-			_show(url);
-		}
-
-	}
-
-	function _init( opts ) {
-		$.extend(options, opts || {});
-		$container = $(options.container);
-		options.animateHeight ? $container.css('overflow', 'hidden') : null;
-		_show(options.firstPage);
-	}
-
-	function _show( url ) {
-		if ( states.current ) {
-			_saveState( states.current );
-			states.last = states.current;
-		}
-
-		states.current = url;
-
-		if ( _isThisStateCached() ) {
-			_restoreState();
-		} else {
-			_newState();
+	var methods = {
+		goto: function( url ) {
+			this.show( url );
 		}
 	}
 
-	// Check if current state is cached.
-	function _isThisStateCached() {
-		return (options.cache && cache[states.current]);
+	function PageManager( element, options ) {
+		this.element = element;
+		this.options = $.extend( {}, defaults, options);
+		this._defaults = defaults;
+		this._name = pluginName;
+		this.init();
 	}
 
-	// Check if passed state is cached.
-	function _isStateCached( state ) {
-		return (options.cache && cache[state]);
-	}
+	PageManager.prototype = {
+		
+		init: function() {
+			this.options.animateHeight ? this.element.css('overflow', 'hidden') : null;
+			this.show(this.options.firstPage);
+		},
 
-	// Cache a state OR overwrite existing cache entry for a page.
-	function _saveState( state ) {
-		cache[state] = $container.html();
-	}
-
-	// Create brand new state + make request to grab page DOM data.
-	function _newState() {
-		var _url = states.current + '.html';
-		$.get(_url, function(data) {
-			$data = data;
-			options.animate ? _renderAnimate() : _render();
-		});
-	}
-
-	// Restore cached state with DOM data.
-	function _restoreState( state ) {
-		options.animate ? _renderAnimate( cache[state] ) : _render( cache[state] );
-	}
-
-	// Used to be animateHeight for cached entries:
-	function _renderAnimate() {
-		_animateBefore( function() {
-			if ( options.animateHeight ) {
-				var oldHeight = $container.height();
-				_isThisStateCached() ? $container.html(cache[states.current]) : $container.html($data);
-				$container.css('height', 'auto');
-				var newHeight = $container.height();
-				$container.height(oldHeight).animate( { 'height':newHeight }, { duration: options.animationHeightDuration, easing: options.animationHeightEasing, 
-					complete: function() { 
-						$container.css('height', 'auto');
-						_animateAfter();
-					}
-				});
-			} else {
-				_isThisStateCached() ? $container.html(cache[states.current]) : $container.html($data);
-				_animateAfter();
+		show: function( url ) {
+			if ( states.current ) {
+			this.saveState( states.current );
+				states.last = states.current;
 			}
-		});
-	}
 
-	function _render(data) {
-		_isThisStateCached() ? $container.html(cache[states.current]) : $container.html($data);
-	}
+			states.current = url;
 
-	function _animateBefore( complete ) {
-		$container.animate(options.animationProperties.before, {duration: options.animationDuration.before, easing: options.animationEasing.before, complete: complete, queue: false});
-	}
+			if ( this.isCached() ) {
+				this.restoreState();
+			} else {
+				this.newState();
+			}
+		},
 
-	function _animateAfter( complete ) {
-		$container.animate(options.animationProperties.after, {duration: options.animationDuration.after, easing: options.animationEasing.after, complete: complete, queue: false});
-	}
+		isCached: function() {
+			return (this.options.cache && cache[states.current]);
+		},
 
-	$.pageManager = function(method) {
+		newState: function() {
+			$this = this;
+			var _url = states.current + '.html';
+			$.get(_url, function(data) {
+				$data = data;
+				$this.options.animate ? $this.renderAnimate() : $this.render();
+			});
+		},
 
-		// If 'method' exists in the 'pub' object.
-		if ( pub[method] ) {
+		saveState: function(state) {
+			cache[state] = this.element.html();
+		},
 
-			// Call the method inside 'pub' in the 'pageManager' context with all of the arguments after the first argument of the 'pageManager' method, which is the method we're referring to.
-			return pub[method].apply(this, Array.prototype.slice.call(arguments, 1));
+		restoreState: function( state ) {
+			this.options.animate ? this.renderAnimate( cache[state] ) : this.render( cache[state] );
+		},
 
-		// Or, if the argument is an object:
-		} else if (typeof method === "object" || !method) {
+		renderAnimate: function() {
+			$this = this;
+			this.animateBefore( function() {
+				if ( $this.options.animateHeight ) {
+					var oldHeight = $this.element.height();
+					$this.isCached() ? $this.element.html(cache[states.current]) : $this.element.html($data);
+					$this.element.css('height', 'auto');
+					var newHeight = $this.element.height();
+					$this.element.height(oldHeight).animate( { 'height':newHeight }, { duration: $this.options.animationHeightDuration, easing: $this.options.animationHeightEasing, 
+						complete: function() { 
+							$this.element.css('height', 'auto');
+							$this.animateAfter();
+						}
+					});
+				} else {
+					$this.isCached() ? $this.element.html(cache[states.current]) : $this.element.html($data);
+					$this.animateAfter();
+				}
+			});
+		},
 
-			// Pass the object to '_init' to change the options.
-			return _init.apply(this, arguments);
+		render: function() {
+			this.isCached() ? this.element.html(cache[states.current]) : this.element.html($data);
+		},
+
+		animateBefore: function( complete ) {
+			this.element.animate(this.options.animationProperties.before, {duration: this.options.animationDuration.before, easing: this.options.animationEasing.before, complete: complete, queue: false});
+		},
+
+		animateAfter: function( complete ) {
+			this.element.animate(this.options.animationProperties.after, {duration: this.options.animationDuration.after, easing: this.options.animationEasing.after, complete: complete, queue: false});
 		}
-		return this;
 	}
 
-})(jQuery);
+	$.fn[pluginName] = function( param ) {
+		if ( typeof param === 'object' || ! param ) {
+			$instance = new PageManager( this, param );
+			// return methods[ method ].apply( this, Array.prototype.slice.call( arguments, 1));
+		} else {
+			$instance.show(param);
+		}
+
+		// return this.each(function() {
+		// 	if (!$.data(this, "plugin_" + pluginName)) {
+		// 		$.data(this, "plugin_" + pluginName,
+		// 		new PageManager( this, options ));
+		// 	}
+		// });
+	}
+
+})( jQuery, window, document );
